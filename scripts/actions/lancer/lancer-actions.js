@@ -24,7 +24,9 @@ export class ActionHandlerLancer extends ActionHandler {
 
     switch (actor.data.type) {
       case "pilot":
-        this._combineCategoryWithList(result, this.i18n("tokenactionhud.pilot"), this._pilotCategory(actor, tokenId));
+        // TODO: figure out new pilot data and owned item paths.
+        break;
+      case "mech":
         this._combineCategoryWithList(result, this.i18n("tokenactionhud.mech"), this._mechCategory(actor, tokenId));
         this._combineCategoryWithList(
           result,
@@ -60,6 +62,7 @@ export class ActionHandlerLancer extends ActionHandler {
     if (option) {
       option.max && (action.name += ` [${option.uses}/${option.max}]`);
       option.charged && (action.icon = `<i class="mdi mdi-flash"></i>`);
+      option.loading && (action.icon = `<i class="mdi mdi-ammunition"></i>`);
     }
 
     action.encodedValue = [macroType, tokenId, actionId, JSON.stringify(option ? option : {})].join(this.delimiter);
@@ -76,27 +79,7 @@ export class ActionHandlerLancer extends ActionHandler {
         return item.type === itemType;
       })
       .map((item) => {
-        let isCharged = false;
-        let currentUses = 0;
-        let maxUses = 0;
-
-        let chargeTag = item.data.tags.find((tag) => tag.tag.fallback_lid === "tg_recharge");
-        if (chargeTag) {
-          isCharged = true;
-          currentUses = item.data.charged ? 1 : 0;
-          maxUses = 1;
-        }
-        let limitedTag = item.data.tags.find((tag) => tag.tag.fallback_lid === "tg_limited");
-        if (limitedTag) {
-          currentUses = item.data.uses;
-          maxUses = limitedTag.val;
-        }
-
-        return this._makeAction(item.name, macro, tokenId, item._id, {
-          uses: currentUses,
-          max: maxUses,
-          charged: isCharged,
-        });
+        return this._makeAction(item.name, macro, tokenId, item._id, this._getUseData(item));
       });
 
     return result;
@@ -115,27 +98,7 @@ export class ActionHandlerLancer extends ActionHandler {
         return item.data.type === itemType;
       })
       .map((item) => {
-        let isCharged = false;
-        let currentUses = 0;
-        let maxUses = 0;
-
-        let chargeTag = item.data.tags.find((tag) => tag.tag.fallback_lid === "tg_recharge");
-        if (chargeTag) {
-          isCharged = true;
-          currentUses = item.data.charged ? 1 : 0;
-          maxUses = 1;
-        }
-        let limitedTag = item.data.tags.find((tag) => tag.tag.fallback_lid === "tg_limited");
-        if (limitedTag) {
-          currentUses = item.data.uses;
-          maxUses = limitedTag.val;
-        }
-
-        return this._makeAction(item.name, macro, tokenId, item._id, {
-          uses: currentUses,
-          max: maxUses,
-          charged: isCharged,
-        });
+        return this._makeAction(item.name, macro, tokenId, item._id, this._getUseData(item));
       });
 
     return result;
@@ -279,10 +242,10 @@ export class ActionHandlerLancer extends ActionHandler {
     let engineering = this.i18n("tokenactionhud.engineering");
 
     let haseActionData = [
-      { name: hull, id: "hull" },
-      { name: agility, id: "agility" },
-      { name: systems, id: "systems" },
-      { name: engineering, id: "engineering" },
+      { name: hull, id: "mm.ent.Hull" },
+      { name: agility, id: "mm.ent.Agility" },
+      { name: systems, id: "mm.ent.Systems" },
+      { name: engineering, id: "mm.ent.Engineering" },
     ];
 
     let haseActions = haseActionData.map((actionData) => {
@@ -301,12 +264,12 @@ export class ActionHandlerLancer extends ActionHandler {
     result.id = "stat";
     result.name = this.i18n("tokenactionhud.stat");
 
-    let grit = this.i18n("tokenactionhud.grit");
+    // let grit = this.i18n("tokenactionhud.grit");
     let techAttack = this.i18n("tokenactionhud.techattack");
 
     let statActionData = [
-      { name: grit, data: "pilot.grit" },
-      { name: techAttack, data: "mech.tech_attack" },
+      // { name: grit, data: "pilot.grit" },
+      { name: techAttack, data: "mm.ent.TechAttack" },
     ];
 
     let statActions = statActionData.map((actionData) => {
@@ -357,7 +320,17 @@ export class ActionHandlerLancer extends ActionHandler {
         let subcat = this.initializeEmptySubcategory(weapon.id);
         subcat.name = weapon.name;
 
-        let attack = this._makeAction(this.i18n("tokenactionhud.attack"), macro, tokenId, weapon._id);
+        let loadingTag = weapon.data.profiles[weapon.data.selected_profile].tags.find(
+          (tag) => tag.tag.fallback_lid === "tg_loading"
+        );
+        let loadData = {};
+        if (loadingTag) {
+          loadData.uses = weapon.data.loaded ? 1 : 0;
+          loadData.max = 1;
+          loadData.loading = true;
+        }
+
+        let attack = this._makeAction(this.i18n("tokenactionhud.attack"), macro, tokenId, weapon._id, loadData);
 
         subcat.actions = [attack];
 
@@ -398,5 +371,25 @@ export class ActionHandlerLancer extends ActionHandler {
     });
 
     return result;
+  }
+
+  _getUseData(item) {
+    let isCharged = false;
+    let currentUses = 0;
+    let maxUses = 0;
+
+    let chargeTag = item.data.tags.find((tag) => tag.tag.fallback_lid === "tg_recharge");
+    if (chargeTag) {
+      isCharged = true;
+      currentUses = item.data.charged ? 1 : 0;
+      maxUses = 1;
+    }
+    let limitedTag = item.data.tags.find((tag) => tag.tag.fallback_lid === "tg_limited");
+    if (limitedTag) {
+      currentUses = item.data.uses;
+      maxUses = limitedTag.val;
+    }
+
+    return { uses: currentUses, max: maxUses, charged: isCharged };
   }
 }
