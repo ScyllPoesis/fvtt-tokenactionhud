@@ -1,6 +1,6 @@
 {
     "name": "token-action-hud",
-    "title": "Token Action HUD",
+    "title": "Token Action HUD (LANCER TEMP FORK)",
     "author": "^ and stick#0520 (ScyllPoesis fork)",
     "description": "Creates a HUD showing a selected token's common actions.",
     "minimumCoreVersion": "0.6.0",
