@@ -82,7 +82,7 @@
         }
     ],
     "url": "https://github.com/ScyllPoesis/fvtt-tokenactionhud",
-    "manifest": "https://github.com/ScyllPoesis/fvtt-tokenactionhud/raw/lancer-1.0/module.json",
-    "version": "1.0.16",
-    "download": "https://github.com/ScyllPoesis/fvtt-tokenactionhud/releases/download/1.0.16/release_1.0.16.zip"
+    "manifest": "https://raw.githubusercontent.com/ScyllPoesis/fvtt-tokenactionhud/lancer-1.0/module.json",
+    "version": "lancer-0.9",
+    "download": "https://github.com/ScyllPoesis/fvtt-tokenactionhud/releases/download/lancer-0.9/lancer-patch.zip"
 }
